@@ -121,7 +121,9 @@ const OrderSummary = ({
 
         <div className="flex items-center justify-between pt-1 pb-4">
           <span className="text-base font-semibold text-gray-900">Total</span>
-          <span className="text-lg font-bold text-gray-900">₹{total}</span>
+          <span className="text-lg font-bold text-gray-900">
+            ₹{Math.round(1.18 * basePrice * quantity)}
+          </span>
         </div>
       </div>
 
@@ -373,7 +375,7 @@ const CheckOutPage = () => {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder=""
+                placeholder="SAVE10,FLAT100"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
                 className="flex-1 px-4 py-2.5 bg-gray-200 rounded-md text-sm text-gray-900 placeholder-gray-500 border-0 focus:outline-none focus:ring-2 focus:ring-gray-300"
