@@ -19,8 +19,18 @@ const convertToISO = (dateStr?: string): string => {
     return new Date().toISOString().slice(0, 10);
   }
   const months: { [key: string]: string } = {
-    "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06",
-    "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"
+    Jan: "01",
+    Feb: "02",
+    Mar: "03",
+    Apr: "04",
+    May: "05",
+    Jun: "06",
+    Jul: "07",
+    Aug: "08",
+    Sep: "09",
+    Oct: "10",
+    Nov: "11",
+    Dec: "12",
   };
   const parts = dateStr.split(" ");
   if (parts.length === 2) {
@@ -40,7 +50,6 @@ const InputField = ({
   className,
   pattern,
 }: InputFieldProps) => {
-
   return (
     <div>
       <label className="block text-xs text-gray-600 mb-2 font-normal">
@@ -81,7 +90,9 @@ const OrderSummary = ({
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Date</span>
-          <span className="text-sm font-medium text-gray-900">{convertToISO(date)}</span>
+          <span className="text-sm font-medium text-gray-900">
+            {convertToISO(date)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -96,12 +107,16 @@ const OrderSummary = ({
 
         <div className="flex items-center justify-between pt-1">
           <span className="text-sm text-gray-600">Subtotal</span>
-          <span className="text-sm font-medium text-gray-900">₹{basePrice*quantity}</span>
+          <span className="text-sm font-medium text-gray-900">
+            ₹{basePrice * quantity}
+          </span>
         </div>
 
         <div className="flex items-center justify-between pb-3 border-b border-gray-300">
           <span className="text-sm text-gray-600">Taxes</span>
-          <span className="text-sm font-medium text-gray-900">₹{Math.floor(0.18*basePrice*quantity)}</span>
+          <span className="text-sm font-medium text-gray-900">
+            ₹{Math.floor(0.18 * basePrice * quantity)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between pt-1 pb-4">
@@ -110,7 +125,8 @@ const OrderSummary = ({
         </div>
       </div>
 
-      <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold text-sm py-3 rounded-md transition-colors"
+      <button
+        className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold text-sm py-3 rounded-md transition-colors"
         onClick={onPayClick}
       >
         Pay and Confirm
@@ -126,18 +142,21 @@ const CheckOutPage = () => {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const router = useRouter();
   const { orderSummary, setOrderSummary } = useOrder();
-  const [discount, setDiscount] = useState(0)
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
-    console.log({discount})
-  }, [discount])
+    console.log({ discount });
+  }, [discount]);
 
   const validateName = (name: string) => {
     if (!name || !name.trim()) {
       return { valid: false, message: "Full name is required." };
     }
     if (name.trim().length < 2) {
-      return { valid: false, message: "Full name must be at least 2 characters." };
+      return {
+        valid: false,
+        message: "Full name must be at least 2 characters.",
+      };
     }
     return { valid: true, message: "" };
   };
@@ -165,8 +184,8 @@ const CheckOutPage = () => {
         body: JSON.stringify({ code: promoCode.trim() }),
       });
       const data = await res.json();
-      setDiscount(data.discount ?? 0)
-      console.log("promoData",data)
+      setDiscount(data.discount ?? 0);
+      console.log("promoData", data);
       if (data.valid) {
         alert(`Promo applied: ${data.code}`);
       } else {
@@ -200,7 +219,9 @@ const CheckOutPage = () => {
 
     // Validate order summary exists and has all required fields
     if (!orderSummary) {
-      alert("Order details are missing. Please go back and select an experience.");
+      alert(
+        "Order details are missing. Please go back and select an experience."
+      );
       return;
     }
 
@@ -235,7 +256,9 @@ const CheckOutPage = () => {
     }
 
     if (!orderSummary.experienceId) {
-      alert("Experience ID is missing. Please go back and select an experience.");
+      alert(
+        "Experience ID is missing. Please go back and select an experience."
+      );
       return;
     }
 
@@ -245,7 +268,10 @@ const CheckOutPage = () => {
     }
 
     // Generate unique refTxn (timestamp + random string)
-    const refTxn = `TXN${Date.now()}${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    const refTxn = `TXN${Date.now()}${Math.random()
+      .toString(36)
+      .substring(2, 9)
+      .toUpperCase()}`;
 
     // Convert Total from string (e.g., "₹1058" or "1058") to number
     const totalAmount = parseInt(orderSummary.Total.replace(/[₹,\s]/g, ""), 10);
@@ -263,7 +289,7 @@ const CheckOutPage = () => {
         qty: orderSummary.Qty,
         total: totalAmount,
         refTxn: refTxn,
-      })
+      });
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: {
@@ -276,15 +302,21 @@ const CheckOutPage = () => {
           qty: orderSummary.Qty,
           total: totalAmount,
           refTxn: refTxn,
+          email: email,
+          name: fullName,
         }),
       });
-      console.log("bookingData", response)
+      console.log("bookingData", response);
       const data = await response.json();
-
+      console.log({ data });
       if (!response.ok) {
         // Handle different error statuses
-        if (response.status === 409) {
-          alert("Sorry, this slot is sold out. Please select a different time.");
+        if (response.status === 409 && data.error) {
+          alert(`Booking failed: ${data.error || "Invalid request"}`);
+        } else if (response.status === 409) {
+          alert(
+            "Sorry, this slot is sold out. Please select a different time."
+          );
         } else if (response.status === 400) {
           alert(`Booking failed: ${data.error || "Invalid request"}`);
         } else if (response.status === 404) {
@@ -388,7 +420,18 @@ const CheckOutPage = () => {
 
         {/* Right Column - Order Summary */}
         <div className="lg:col-span-1">
-          <OrderSummary experienceName={orderSummary?.Experience} date={orderSummary?.Date} time={orderSummary?.Time} quantity={orderSummary?.Qty} total={orderSummary?.Total} basePrice={Math.round((1 - ((Number(discount) || 0) / 100)) * (orderSummary?.basePrice ?? 0))} onPayClick={handlePayAndConfirm} />
+          <OrderSummary
+            experienceName={orderSummary?.Experience}
+            date={orderSummary?.Date}
+            time={orderSummary?.Time}
+            quantity={orderSummary?.Qty}
+            total={orderSummary?.Total}
+            basePrice={Math.round(
+              (1 - (Number(discount) || 0) / 100) *
+                (orderSummary?.basePrice ?? 0)
+            )}
+            onPayClick={handlePayAndConfirm}
+          />
         </div>
       </div>
     </main>

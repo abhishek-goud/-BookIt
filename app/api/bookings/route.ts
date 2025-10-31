@@ -12,16 +12,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { experienceId, date, time, qty, total, refTxn } = body as {
+  const { experienceId, date, time, qty, total, refTxn, email, name } = body as {
     experienceId: string;
     date: string;
     time: string;
     qty: number;
     total: number;
     refTxn: string;
+    email: string;
+    name: string
   };
-  console.log( {metaData: { experienceId, date, time, qty, total, refTxn } })
-  if (!experienceId || !date || !time || !qty || !total || !refTxn) {
+  console.log( {metaData: { experienceId, date, time, qty, total, refTxn, email, name } })
+  if (!experienceId || !date || !time || !qty || !total || !refTxn || !email || !name) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -51,6 +53,14 @@ export async function POST(req: NextRequest) {
   const existingByRef = await Booking.findOne({ refTxn }).lean();
   if (existingByRef) {
     return NextResponse.json(existingByRef, { status: 200 });
+  }
+
+  // Email policy: ensure a particular email can book a given experience only once
+  const existingByEmailAndExperience = await Booking.findOne({ experienceId, email }).lean();
+  console.log({booking: existingByEmailAndExperience})
+  if (existingByEmailAndExperience) {
+    console.log("email conflict")
+    return NextResponse.json({ error: "This email has already booked this spot." }, { status: 409 });
   }
 
   // Check capacity before attempting to decrement (capacity stored as string)
@@ -89,6 +99,8 @@ export async function POST(req: NextRequest) {
       qty,
       total,
       refTxn,
+      email,
+      name,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (err: any) {
