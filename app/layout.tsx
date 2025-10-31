@@ -1,4 +1,3 @@
-// @ts-expect-error: No type declarations for side-effect CSS imports in this project
 import "./globals.css";
 import Header from "@/components/Header";
 import { SearchProvider } from "@/context/SearchContext";
