@@ -27,7 +27,6 @@ const BookingSchema = new Schema<BookingDocument>(
     email: {
       type: String,
       required: true,
-      unique: true,
       minlength: 1,
       maxlength: 250,
       trim: true,
@@ -44,9 +43,11 @@ const BookingSchema = new Schema<BookingDocument>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
-// Optional protective index to prevent exact duplicate slot bookings
-// when capacity is effectively 1 per slot. We will still enforce capacity via code.
+// Prevent duplicate slot bookings lookup optimization
 BookingSchema.index({ experienceId: 1, date: 1, time: 1 });
+
+// Enforce: an email can only book a given experience once
+BookingSchema.index({ experienceId: 1, email: 1 }, { unique: true });
 
 export const Booking =
   models.Booking || model<BookingDocument>("Booking", BookingSchema);

@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(created, { status: 201 });
   } catch (err: any) {
+    // console.log({error:err})
     // Compensate decrement on failure (add back qty)
     const incPath = `times.${slotIndex}.capacity` as const;
     await Experience.updateOne(
@@ -114,6 +115,17 @@ export async function POST(req: NextRequest) {
       const existing = await Booking.findOne({ refTxn }).lean();
       return NextResponse.json(existing, { status: 200 });
     }
+    // Handle legacy unique index on email (email_1) or compound (experienceId_1_email_1)
+    if (
+      err?.code === 11000 &&
+      (err?.keyPattern?.email || (err?.keyPattern?.experienceId && err?.keyPattern?.email))
+    ) {
+      return NextResponse.json(
+        { error: "This email has already booked this experience." },
+        { status: 409 }
+      );
+    }
+    console.log({error:err})
     return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
   }
 }
